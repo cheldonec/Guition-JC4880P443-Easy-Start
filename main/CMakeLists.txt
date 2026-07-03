@@ -11,11 +11,6 @@ idf_component_register(
         "onboard_hardware/storage/sd_card_io.c"
         "onboard_hardware/net_if/init_netif.c"
         
-        "audio/audio_codec_rec.c"
-        "audio/audio_codec_play.c"
-        
-        "audio/audio_codec_engine.c"
-        
         "project_event_handler_manager/project_event_handler_manager.c"
         
         "lvgl_gui_app/init_lvgl_9.c"
@@ -54,7 +49,7 @@ idf_component_register(
         
         
     INCLUDE_DIRS "."
-    EMBED_TXTFILES yandex-ca.pem
+    #EMBED_TXTFILES yandex-ca.pem
 )
 
 # === Настройка OTA через Partition (ESP-Hosted) ===

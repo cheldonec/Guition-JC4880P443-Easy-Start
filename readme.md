@@ -68,6 +68,11 @@ idf.py flash
 # Flash RCP firmware manually to partition
 🔥 RCP OTA: After first flash, network_adapter.bin is auto-copied to main/applications/sys_app_rcp_c6_update/slave_fw_bin/1_network_adapter.bin.
 
+Open flash_slave_fw.py and configure COM PORT
+    PORT = "COM9" <------------
+    PARTITION_NAME = "slave_fw"
+    DESCRIPTION = "Network adapter firmware for external RCP/C6 module"
+
 python flash_slave_fw.py
 
 --------------------------------------------------------------------------------------------------------------------------
