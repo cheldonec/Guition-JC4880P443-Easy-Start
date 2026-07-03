@@ -25,7 +25,7 @@ build/
 *.exe # For any host-side utilities compiled on Windows
 
 # ESP-IDF specific build outputs
-*.bin
+#*.bin
 *.elf
 *.map
 flasher_args.json # Generated in build directory
