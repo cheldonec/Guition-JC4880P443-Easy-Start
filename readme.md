@@ -41,7 +41,7 @@ This project implements a **feature-rich embedded GUI** for the **Guition JC4880
 | **Touch** | GT911 | I²C | SDA: GPIO7, SCL: GPIO8 | INT/RST unused (GPIO_NC) |
 | **Audio Codec** | ES8311 | I²S + I²C | MCLK: GPIO13, WS: GPIO10, BCLK: GPIO12, DIN: GPIO48, DOUT: GPIO9, I²C: GPIO7/GPIO8 | PA: GPIO11 |
 | **SD Card** | — | SPI/SDIO | — | Uses default SPI host (SCK: GPIO36, etc.) |
-| **External RCP** | ESP32-C6 | USB-UART | — | Firmware: `network_adapter.bin` → `slave_fw` @ `0x620000` |
+| **External RCP** | ESP32-C6 | SDIO | — | Firmware: `network_adapter.bin` → `slave_fw` @ `0x620000` |
 
 > ℹ️ All pins are described in [`board_config.h`](main/board_config.h). Change them to match your board.
 
