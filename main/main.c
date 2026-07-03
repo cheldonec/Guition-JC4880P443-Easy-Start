@@ -80,10 +80,10 @@ void app_main(void)
 
      //AAUDIO TEST
     //  AUDIO APP INIT
-    //audio_app_init();
+    audio_app_init();
     //vTaskDelay(pdMS_TO_TICKS(5000));
     // Event-примеры
-    //audio_app_sample_events_start();
+    audio_app_sample_events_start();
 
     ESP_LOGI(TAG, "✅ All applications started");
 
