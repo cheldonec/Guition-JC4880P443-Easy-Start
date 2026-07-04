@@ -76,7 +76,7 @@ esp_err_t bsp_audio_codec_es8311_init(i2c_master_bus_handle_t i2c_bus_handle, i2
             audio_codec_delete_codec_if(codec_if);
             goto cleanup;
         }
-        esp_codec_dev_set_out_vol(audio_dev_es8311.play_dev, 60.0);
+        //esp_codec_dev_set_out_vol(audio_dev_es8311.play_dev, 60.0);
     }
 
     // === ADC (REC) ===
@@ -114,15 +114,16 @@ esp_err_t bsp_audio_codec_es8311_init(i2c_master_bus_handle_t i2c_bus_handle, i2
             goto cleanup;
         }
 
-        esp_codec_dev_set_in_gain(audio_dev_es8311.rec_dev, 40.0);
+        //esp_codec_dev_set_in_gain(audio_dev_es8311.rec_dev, 40.0);
     }
 
     // ✅ ДОБАВЛЕНО: Открываем устройства один раз при инициализации
-    esp_codec_dev_sample_info_t fs = {
-        .sample_rate = 16000, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
-        .channel = 1,         // ← mono, как в I2S config
+    /*esp_codec_dev_sample_info_t fs = {
+        .sample_rate = 44100, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
+        .channel = 2,         // ← mono, как в I2S config
         .bits_per_sample = 16,
     };
+
 
     if (audio_dev_es8311.rec_dev) {
         esp_err_t ret = esp_codec_dev_open(audio_dev_es8311.rec_dev, &fs);
@@ -143,7 +144,7 @@ esp_err_t bsp_audio_codec_es8311_init(i2c_master_bus_handle_t i2c_bus_handle, i2
             goto cleanup;
         }
         ESP_LOGI(TAG, "✅ play_dev opened: %d Hz, %d ch, %d bps", fs.sample_rate, fs.channel, fs.bits_per_sample);
-    }
+    }*/
 
     ESP_LOGI(TAG, "ES8311 initialized: play_dev=%p, rec_dev=%p", audio_dev_es8311.play_dev, audio_dev_es8311.rec_dev);
     return ESP_OK;

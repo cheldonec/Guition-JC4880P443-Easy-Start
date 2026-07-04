@@ -31,6 +31,8 @@ void audio_play_player_stop(void)
 
 static esp_err_t audio_play_from_mem(const uint8_t *buffer, uint32_t size, uint32_t *bytes_played_ptr)
 {
+    
+    s_play_stop_requested = false;
     if (!audio_dev_es8311.play_dev) {
         ESP_LOGE(TAG, "❌ Play device not initialized");
         return ESP_ERR_INVALID_STATE;
@@ -41,6 +43,28 @@ static esp_err_t audio_play_from_mem(const uint8_t *buffer, uint32_t size, uint3
         return ESP_ERR_INVALID_ARG;
     }
 
+    esp_codec_dev_sample_info_t fs = {
+        .sample_rate = 16000, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
+        .channel = 1,         // ← mono, как в I2S config
+        .bits_per_sample = 16,
+    };
+
+    
+    // Включаем каналы
+    /*esp_err_t ret = i2s_channel_enable(i2s_tx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel enable failed (i2s_tx_handle)");
+        return ESP_FAIL;
+    }*/
+    
+
+    esp_err_t ret = esp_codec_dev_open(audio_dev_es8311.play_dev, &fs);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open codec device (audio_dev_es8311.play_dev)");
+        return ESP_FAIL;
+    }
+
+    esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, false);
     // Сброс флага на случай, если вызов не из task
     if (bytes_played_ptr) *bytes_played_ptr = 0;
 
@@ -55,6 +79,8 @@ static esp_err_t audio_play_from_mem(const uint8_t *buffer, uint32_t size, uint3
         if (s_play_stop_requested) {
             ESP_LOGW(TAG, "⚠️ Playback stopped internally (mem)");
             s_play_stop_requested = false;
+            esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
         }
 
@@ -66,11 +92,11 @@ static esp_err_t audio_play_from_mem(const uint8_t *buffer, uint32_t size, uint3
     }
 
     heap_caps_free(work_buf);
-    vTaskDelay(pdMS_TO_TICKS(100));
-
+    
     // Всегда возвращаем пройденный путь, даже при останове
     if (bytes_played_ptr) *bytes_played_ptr = pos;
-
+    esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
+    vTaskDelay(pdMS_TO_TICKS(100));
     if (s_play_stop_requested) {
         // Событие отправит task, здесь просто помечаем и выходим
         return ESP_FAIL;
@@ -86,10 +112,31 @@ static esp_err_t audio_play_from_mem(const uint8_t *buffer, uint32_t size, uint3
 
 static esp_err_t audio_play_wav_file(const char *filename, uint32_t *bytes_played_ptr)
 {
+    s_play_stop_requested = false;
     if (!audio_dev_es8311.play_dev) {
         ESP_LOGE(TAG, "❌ Play device not initialized");
         return ESP_ERR_INVALID_STATE;
     }
+
+    esp_codec_dev_sample_info_t fs = {
+        .sample_rate = AUDIO_OUTPUT_SAMPLE_RATE, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
+        .channel = 2,         // ← mono, как в I2S config
+        .bits_per_sample = 16,
+    };
+
+    /*esp_err_t ret = i2s_channel_enable(i2s_tx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel tx init error");
+        return ESP_FAIL;
+    }*/
+
+    esp_err_t ret = esp_codec_dev_open(audio_dev_es8311.play_dev, &fs);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open codec device (audio_dev_es8311.play_dev)");
+        return ESP_FAIL;
+    }
+
+    esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, false);
 
     if (bytes_played_ptr) *bytes_played_ptr = 0;
 
@@ -116,6 +163,9 @@ static esp_err_t audio_play_wav_file(const char *filename, uint32_t *bytes_playe
         if (s_play_stop_requested) {
             ESP_LOGW(TAG, "⚠️ Playback stopped internally (file)");
             s_play_stop_requested = false;
+            //esp_codec_dev_close(audio_dev_es8311.play_dev);
+            esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
         }
 
@@ -131,6 +181,9 @@ static esp_err_t audio_play_wav_file(const char *filename, uint32_t *bytes_playe
     heap_caps_free(buf);
 
     if (bytes_played_ptr) *bytes_played_ptr = total_bytes;
+    //esp_codec_dev_close(audio_dev_es8311.play_dev);
+    esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     if (s_play_stop_requested) {
         // Событие отправит task, здесь просто помечаем и выходим
@@ -169,7 +222,7 @@ static void task_play_from_mem(void *arg)
     // ✅ Остановка по флагу — отправляем STOPPED
     if (s_play_stop_requested) {
         ESP_LOGW(TAG, "⚠️ Playback stopped internally (mem), size=%lu bytes", bytes_played);
-
+        esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
         audio_stopped_play_mem_user_sys_msg_t msg = {
             .size = bytes_played,
         };
@@ -180,6 +233,7 @@ static void task_play_from_mem(void *arg)
         }
 
         heap_caps_free(args);
+        vTaskDelay(pdMS_TO_TICKS(100));
         vTaskDelete(NULL);
         return;
     }
@@ -239,7 +293,7 @@ static void task_play_wav_file(void *arg)
     // ✅ Остановка по флагу — отправляем STOPPED
     if (s_play_stop_requested) {
         ESP_LOGW(TAG, "⚠️ Playback stopped internally (file)");
-
+        esp_codec_dev_set_out_mute(audio_dev_es8311.play_dev, true);
         audio_stopped_play_file_user_sys_msg_t msg = {
             .filename = args->filename
         };
@@ -250,6 +304,7 @@ static void task_play_wav_file(void *arg)
         }
 
         heap_caps_free(args);
+        vTaskDelay(pdMS_TO_TICKS(100));
         vTaskDelete(NULL);
         return;
     }

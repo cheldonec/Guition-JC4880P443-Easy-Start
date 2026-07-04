@@ -91,12 +91,18 @@ typedef struct {
 //APP_EVENT_SD_CARD_MOUNTED
 typedef struct {
     const char *mount_point;
-} audio_sd_card_mounted_sys_msg_t;
+} sd_card_mounted_sys_msg_t;
 
 //APP_EVENT_SD_CARD_UNMOUNTED
 typedef struct {
     // пустая структура — достаточно одного события
-} audio_sd_card_unmounted_sys_msg_t;
+} sd_card_unmounted_sys_msg_t;
+
+//APP_EVENT_SD_FILES_LIST
+typedef struct {
+    uint16_t file_count;
+    char filenames[0][64];  // flexible array: [0] = "file1.txt", [1] = "file2.wav", ...
+} sd_files_list_sys_msg_t;
 
 //APP_EVENT_WIFI_CONNECTED
 typedef struct {
@@ -134,6 +140,12 @@ typedef struct {
 
     UBaseType_t stack_words;     // остаток стека (в словах)
 } memory_status_sys_msg_t;
+
+//LVGL MSGs
+typedef struct {
+    uint16_t file_count;
+    char filenames[0][64];  // flexible array
+} sd_file_list_lvgl_event_t;
 
 // --- ID событий (пример — расширяется по мере необходимости) ---
 typedef enum {
@@ -176,6 +188,7 @@ typedef enum {
     // SD Card events
     APP_EVENT_SD_CARD_MOUNTED,                         //audio_sd_card_mounted_sys_msg_t
     APP_EVENT_SD_CARD_UNMOUNTED,                       //audio_sd_card_unmounted_sys_msg_t
+    APP_EVENT_SD_FILES_LIST,                           //sd_files_list_sys_msg_t 
     
     // LCD / Touch events
     APP_EVENT_TOUCH_TAP,
@@ -186,6 +199,8 @@ typedef enum {
     APP_EVENT_SYSTEM_POWER_LOW,
     APP_EVENT_SYSTEM_SHUTDOWN,
     
+    //LVGL
+    APP_EVENT_SD_FILE_LIST_LVGL,
     // Custom user events
     APP_EVENT_USER_0 = 0xF000,
     APP_EVENT_USER_1,

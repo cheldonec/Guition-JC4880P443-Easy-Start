@@ -43,6 +43,9 @@ idf_component_register(
         "applications/sys_app_audio_play_and_rec/audio_play.c"
         "applications/sys_app_audio_play_and_rec/audio_app_sample_events.c"
 
+        #USER applications
+        "applications_for_user/lvgl_audio_player/audio_player_app.c"
+
         
         #"applications/ya_cloud_speech_recognition/cloud_yandex.c"
         #"applications/ya_cloud_speech_recognition/ya_cloud_speech_recognition_app.c"

@@ -93,13 +93,48 @@ static void main_sys_event_handler(project_event_id_t id, const void *data, uint
 
         // === SD CARD EVENTS ===
         case APP_EVENT_SD_CARD_MOUNTED: {
-            const audio_sd_card_mounted_sys_msg_t *msg = (const audio_sd_card_mounted_sys_msg_t*)data;
+            const sd_card_mounted_sys_msg_t *msg = (const sd_card_mounted_sys_msg_t*)data;
             ESP_LOGI(TAG, "[SD CARD] SD CARD MOUNTED at: %s", msg->mount_point);
             break;
         }
 
         case APP_EVENT_SD_CARD_UNMOUNTED: {
             ESP_LOGW(TAG, "[SD CARD] SD CARD UNMOUNTED");
+            break;
+        }
+
+        case APP_EVENT_SD_FILES_LIST: {
+            if (len < sizeof(sd_files_list_sys_msg_t)) {
+                ESP_LOGE(TAG, "[SD] Invalid SD_FILES_LIST len=%u", len);
+                break;
+            }
+            
+            const sd_files_list_sys_msg_t *msg = (const sd_files_list_sys_msg_t*)data;
+            ESP_LOGI(TAG, "[SD] File list: %u files", msg->file_count);
+
+            // Выводим красивую таблицу
+            printf("\n");
+            printf("╔════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n");
+            printf("║ %-60s ║\n", "SD CARD FILE LIST");
+            printf("╠════════════════════════════════════════════════════════════════════════════════════════════════════════════╣\n");
+
+            for (uint16_t i = 0; i < msg->file_count; i++) {
+                const char *filename = &msg->filenames[i][0];
+                printf("║ %-60s ║\n", filename);
+            }
+
+            printf("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n\n");
+            
+            // ✅ Теперь отправляем событие LVGL-приложению
+            size_t lvgl_size = sizeof(sd_file_list_lvgl_event_t) + msg->file_count * 64;
+            sd_file_list_lvgl_event_t *lvgl_msg = heap_caps_malloc(lvgl_size, MALLOC_CAP_DEFAULT);
+            if (lvgl_msg) {
+                lvgl_msg->file_count = msg->file_count;
+                for (uint16_t i = 0; i < msg->file_count; i++) {
+                    strcpy(&lvgl_msg->filenames[i][0], &msg->filenames[i][0]);
+                }
+                project_event_send(APP_EVENT_SD_FILE_LIST_LVGL, lvgl_msg, lvgl_size);
+            }
             break;
         }
 
@@ -241,6 +276,7 @@ void main_sys_event_handler_register_all(void)
 
     project_event_register_handler(APP_EVENT_SD_CARD_MOUNTED, main_sys_event_handler);
     project_event_register_handler(APP_EVENT_SD_CARD_UNMOUNTED, main_sys_event_handler);
+    project_event_register_handler(APP_EVENT_SD_FILES_LIST, main_sys_event_handler);
 
     project_event_register_handler(APP_EVENT_WIFI_SCAN_DONE, main_sys_event_handler);
     project_event_register_handler(APP_EVENT_WIFI_CONNECTED, main_sys_event_handler);

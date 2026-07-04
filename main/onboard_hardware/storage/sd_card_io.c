@@ -58,7 +58,7 @@ esp_err_t bsp_sd_card_io_init(void)
     ESP_LOGD(TAG, "SD card (Slot 0) mounted!");
 
     // ✅ Отправляем событие — только если монтирование УСПЕШНО
-    audio_sd_card_mounted_sys_msg_t msg = { .mount_point = "/sdcard" };
+    sd_card_mounted_sys_msg_t msg = { .mount_point = "/sdcard" };
     project_event_send(APP_EVENT_SD_CARD_MOUNTED, &msg, sizeof(msg));
 
     return ESP_OK;

@@ -215,7 +215,7 @@ void audio_app_sample_events_start(void)
         s_mem_record_done = false;
 
         // ✅ Создаём задачу-стопер записи
-        xTaskCreate(task_stop_rec_after_3_sec, "stop_rec_after_3_sec", 4096, NULL, 5, NULL);
+        //xTaskCreate(task_stop_rec_after_3_sec, "stop_rec_after_3_sec", 4096, NULL, 5, NULL);
 
         // ✅ Запускаем запись
         esp_err_t ret = audio_record_to_mem_some_secconds_async(10);
@@ -250,11 +250,12 @@ void audio_app_sample_events_start(void)
 
         print_free_memory("After memory playback");
 
+        
         // === 7. Записываем в файл "test3.wav" ===
         ESP_LOGI(TAG, "📝 Starting 10-sec recording to file: test3.wav");
         s_file_record_done = false;
 
-        xTaskCreate(task_stop_rec_after_3_sec, "stop_file_after_3_sec", 4096, NULL, 5, NULL);
+        //xTaskCreate(task_stop_rec_after_3_sec, "stop_file_after_3_sec", 4096, NULL, 5, NULL);
 
         ret = audio_record_to_wav_file_some_secconds_async("test3.wav", 10);
         if (ret != ESP_OK) {
@@ -275,7 +276,7 @@ void audio_app_sample_events_start(void)
         ESP_LOGI(TAG, "⏱️ Will stop playback in 3 seconds...");
 
         // ✅ Запускаем стопер воспроизведения
-        xTaskCreate(task_stop_play_after_3_sec, "stop_play_after_3_sec", 4096, NULL, 5, NULL);
+        //xTaskCreate(task_stop_play_after_3_sec, "stop_play_after_3_sec", 4096, NULL, 5, NULL);
 
         ret = audio_play_from_wav_file_async("test3.wav");
         if (ret != ESP_OK) {

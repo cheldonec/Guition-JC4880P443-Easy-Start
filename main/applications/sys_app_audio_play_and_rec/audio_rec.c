@@ -43,6 +43,39 @@ static esp_err_t audio_record_to_mem_some_secconds(uint32_t duration_sec, uint32
         return ESP_ERR_INVALID_ARG;
     }
 
+    esp_codec_dev_sample_info_t fs = {
+        .sample_rate = 16000, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
+        .channel = 1,         // ← mono, как в I2S config
+        .bits_per_sample = 16,
+    };
+
+    /*ESP_RETURN_ON_ERROR(i2s_channel_init_std_mode(i2s_tx_handle, &std_cfg), TAG, "tx init failed");
+    ESP_LOGI(TAG, "tx init ok");
+    ESP_RETURN_ON_ERROR(i2s_channel_init_std_mode(i2s_rx_handle, &std_cfg), TAG, "rx init failed");
+    ESP_LOGI(TAG, "rx init ok");
+
+    esp_err_t ret = i2s_channel_enable(i2s_rx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel rx init error");
+        return ESP_FAIL;
+    }
+
+    ret = i2s_channel_enable(i2s_tx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel tx init error");
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "rx channel enable ok");
+    
+*/
+    esp_err_t ret = esp_codec_dev_open(audio_dev_es8311.rec_dev, &fs);
+    if (ret != ESP_CODEC_DEV_OK) {
+        ESP_LOGE(TAG, "Failed to open codec device (audio_dev_es8311.rec_dev)");
+        return ESP_FAIL;
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(50));
     // ✅ Отправляем событие "начало записи в память"
     audio_start_rec_to_mem_sys_msg_t start_msg = { .duration_sec = duration_sec };
     project_event_send(APP_EVENT_AUDIO_START_REC_TO_MEM, &start_msg, sizeof(start_msg));
@@ -73,6 +106,8 @@ static esp_err_t audio_record_to_mem_some_secconds(uint32_t duration_sec, uint32
         // ✅ Только внутренний флаг
         if (s_rec_stop_requested) {
             ESP_LOGW(TAG, "⚠️ Recording stopped internally");
+            //esp_codec_dev_close(audio_dev_es8311.rec_dev);
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
         }
 
@@ -104,6 +139,8 @@ static esp_err_t audio_record_to_mem_some_secconds(uint32_t duration_sec, uint32
     }
 
     *out_size = total_size;
+    //esp_codec_dev_close(audio_dev_es8311.rec_dev);
+    vTaskDelay(pdMS_TO_TICKS(100));
     ESP_LOGI(TAG, "✅ Recording complete: %lu bytes", total_size);
     return ESP_OK;
 }
@@ -241,6 +278,35 @@ static esp_err_t audio_record_to_wav_file_some_seconds(const char *filename, uin
         return ESP_FAIL;
     }
 
+    esp_codec_dev_sample_info_t fs = {
+        .sample_rate = AUDIO_OUTPUT_SAMPLE_RATE, // ← из board_config.h AUDIO_INPUT_SAMPLE_RATE / AUDIO_OUTPUT_SAMPLE_RATE
+        .channel = 2,         // ← mono, как в I2S config
+        .bits_per_sample = 16,
+    };
+
+    /*ESP_RETURN_ON_ERROR(i2s_channel_init_std_mode(i2s_tx_handle, &std_cfg), TAG, "tx init failed");
+    ESP_LOGI(TAG, "tx init ok");
+    ESP_RETURN_ON_ERROR(i2s_channel_init_std_mode(i2s_rx_handle, &std_cfg), TAG, "rx init failed");
+    ESP_LOGI(TAG, "rx init ok");
+
+    esp_err_t ret = i2s_channel_enable(i2s_rx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel rx init error");
+        return ESP_FAIL;
+    }
+
+    ret = i2s_channel_enable(i2s_tx_handle);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG,"i2c channel tx init error");
+        return ESP_FAIL;
+    }
+*/
+    esp_err_t ret = esp_codec_dev_open(audio_dev_es8311.rec_dev, &fs);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to open codec device (audio_dev_es8311.rec_dev)");
+        return ESP_FAIL;
+    }
+
     // Записываем WAV-заголовок (44 байта)
     fwrite("RIFF", 1, 4, f);
     fwrite("\0\0\0\0", 1, 4, f); // size
@@ -271,6 +337,8 @@ static esp_err_t audio_record_to_wav_file_some_seconds(const char *filename, uin
         // ✅ Только внутренний флаг
         if (s_rec_stop_requested) {
             ESP_LOGW(TAG, "⚠️ File recording stopped internally");
+            //esp_codec_dev_close(audio_dev_es8311.rec_dev);
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
         }
 
@@ -300,7 +368,12 @@ static esp_err_t audio_record_to_wav_file_some_seconds(const char *filename, uin
     fclose(f);
     heap_caps_free(buf);
 
+
     *out_size = total_size;
+
+    //esp_codec_dev_close(audio_dev_es8311.rec_dev);
+    vTaskDelay(pdMS_TO_TICKS(100));
+
     ESP_LOGI(TAG, "✅ Recorded %lu bytes to %s", total_size, filename);
     return ESP_OK;
 }

@@ -3,7 +3,7 @@
 #include "esp_check.h"
 #include "esp_log.h"
 #include "esp_private/rtc_clk.h"
-#include "driver/i2s.h"
+#include "driver/i2s_std.h"
 
 static const char *TAG = "init_i2s_module";
 
@@ -23,7 +23,7 @@ esp_err_t bsp_init_i2s(void)
     // Слотовая конфигурация — для Philips/I2S
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(AUDIO_OUTPUT_SAMPLE_RATE),
-        .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(16, I2S_SLOT_MODE_MONO),
+        .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(16, I2S_SLOT_MODE_STEREO),
         .gpio_cfg = {
             .mclk = AUDIO_I2S_GPIO_MCLK,
             .bclk = AUDIO_I2S_GPIO_BCLK,
@@ -42,6 +42,7 @@ esp_err_t bsp_init_i2s(void)
     // Включаем каналы
     ESP_RETURN_ON_ERROR(i2s_channel_enable(i2s_tx_handle), TAG, "tx enable failed");
     ESP_LOGI(TAG, "tx enable ok");
+    
     ESP_RETURN_ON_ERROR(i2s_channel_enable(i2s_rx_handle), TAG, "rx enable failed");
     ESP_LOGI(TAG, "rx enable ok");
 

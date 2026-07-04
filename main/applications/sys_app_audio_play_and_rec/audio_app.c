@@ -9,7 +9,9 @@
 
 static const char* TAG = "AUDIO_APP";
 
-static int s_volume = 10;
+static int      s_volume = 10;
+static float    s_gane = 10.0;
+
 
 void audio_app_init(void)
 {
@@ -18,8 +20,19 @@ void audio_app_init(void)
     ESP_LOGI(TAG, "✅ Audio app init (one-shot tasks + mutex)");
 }
 
+esp_err_t audio_rec_device_set_gane(float gane)
+{
+    
+    int res = esp_codec_dev_set_in_gain(audio_dev_es8311.rec_dev, gane);
+    if (res == ESP_CODEC_DEV_OK)
+    {
+        s_gane = gane;
+        return ESP_OK;
+    }
+    return -ESP_ERR_INVALID_ARG;
+}
 
-esp_err_t audio_play_device_set_volume(onboard_audio_device_handle_t audio_dev_es8311, int percent)
+esp_err_t audio_play_device_set_volume(int percent)
 {
     esp_err_t ret = ESP_FAIL;
     if (percent < 0) percent = 0;
@@ -41,6 +54,10 @@ int audio_play_device_get_volume(void)
     return s_volume;
 }
 
+float audio_rec_device_get_gain(void)
+{
+    return s_gane;
+}
 
 
 // === Асинхронные функции ===

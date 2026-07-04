@@ -12,9 +12,13 @@ void audio_app_sample_events_start(void);
 
 void audio_app_init(void);
 
-esp_err_t audio_play_device_set_volume(onboard_audio_device_handle_t audio_dev_es8311, int percent);
+esp_err_t audio_play_device_set_volume(int percent);
+
+esp_err_t audio_rec_device_set_gane(float gane);
 
 int audio_play_device_get_volume(void);
+
+float audio_rec_device_get_gain(void);
 
 // Запись в память (асинхронно)
 esp_err_t audio_record_to_mem_some_secconds_async(uint32_t duration_sec);
